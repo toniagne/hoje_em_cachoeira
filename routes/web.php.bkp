@@ -1,0 +1,126 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+Route::get('commands/{command}', function($command) {
+    try {
+        \Illuminate\Support\Facades\Artisan::call($command);
+    } catch(\Exception $e){
+        dd($e->getMessage());
+    }
+
+    echo \Illuminate\Support\Facades\Artisan::output();
+});
+
+Route::get('image_show/{filename}', 'ImageController@displayImage')->name('image.show');
+Route::get('receive/billEntry', 'Admin\ReceiveController@bills')->name('bills.list');
+Route::get('receive/billOverdue', 'Admin\ReceiveController@billOverdue')->name('bills.list');
+
+Route::group(['prefix'=>'/ecommerce', 'namespace' => 'Ecommerce', 'as' => 'ecommerce.'], function() {
+        Route::get('/{slug}', ['uses' => 'EcommerceController@index'])->name('index');
+});
+
+// ROTAS DO SITE
+Route::group(['prefix'=>'/', 'namespace' => 'Home', 'as' => 'home.'], function() {
+
+    Route::get('/', ['uses' => 'SiteController@index'])->name('index');
+    Route::get('/hoje-em-cachoeira', ['uses' => 'SiteController@index'])->name('index');
+    Route::post('/busca', ['uses' => 'SiteController@search'])->name('search');
+    Route::get('{client}/detalhes/', ['uses' => 'SiteController@details'])->name('details');
+    Route::get('projeto/{slug}', ['uses' => 'SiteController@projectDetail'])->name('project.details');
+    Route::get('/contato', ['uses' => 'SiteController@contact'])->name('contact');
+    Route::POST('/contato', ['uses' => 'SiteController@sendContact'])->name('send.contact');
+    Route::get('/quem-somos', ['uses' => 'SiteController@about'])->name('about');
+    Route::get('/projetos', ['uses' => 'SiteController@projects'])->name('projects');
+    Route::get('/registro', ['uses' => 'SiteController@register'])->name('register');
+    Route::get('/categorias', ['uses' => 'SiteController@categories'])->name('categories');
+    Route::get('/categorias/{slug}', ['uses' => 'SiteController@category'])->name('category');
+    Route::get('politica-de-privacidade', ['uses' => 'SiteController@policies'])->name('policies');
+    Route::get('termos-de-uso', ['uses' => 'SiteController@terms'])->name('terms');
+    Route::get('catalogos/{client}', ['uses' => 'SiteController@catalogs'])->name('catalogs');
+    Route::get('catalogo/{catalog}', ['uses' => 'SiteController@catalog'])->name('catalog');
+});
+
+
+
+Auth::routes();
+
+// ROTAS DO DASH DO CANDIDATO
+
+     Route::group(['namespace' => 'Managements'], function()
+    {
+        Route::group(['prefix' => '/gestao', 'middleware' => ['auth:gestao']], function() {
+            Route::get('/', ['as'=>'clients.dash',  'uses' => 'ManagementController@index']);
+         });
+
+    });
+
+
+// ROTAS DO DASH ADMIN
+Route::group(['prefix'=>'/admin',  'namespace' => 'Admin', 'middleware' => ['auth']], function() {
+
+    Route::get('/', ['as' => 'admin.dash', 'uses' => 'AdminController@index']);
+
+    Route::resource('/clients', 'ClientsController');
+    Route::get('/clients/delete/photo/{attachment}/{client}', 'ClientsController@photos')->name('clients.photo');
+
+    Route::resource('/advertisements', 'AdvertisementsController');
+
+    Route::resource('/users', 'UsersController');
+
+    Route::resource('/payments', 'PaymentsController');
+
+    Route::resource('/categories', 'CategoriesController');
+
+    Route::resource('/contracts', 'ContractsController');
+
+    Route::resource('/configs', 'ConfigsController');
+
+    Route::resource('/usefuls', 'UsefulsController');
+
+    Route::resource('/projects', 'ProjectsController');
+
+    Route::resource('/banners', 'BannersController');
+
+    Route::resource('/receive', 'ReceiveController');
+
+
+    Route::get('promotions/clients', 'PromotionsController@clients')->name('promotions.list');
+    Route::get('promotions/list-promotions/{client}', 'PromotionsController@list_promotions')->name('promotions.list-catalogs');
+    Route::get('promotions/create/{client}', 'PromotionsController@create')->name('promotions.create');
+    Route::post('promotions/store/{client}', 'PromotionsController@store')->name('promotions.store');
+    Route::get('promotions/edit/{catalog}/{client}', 'PromotionsController@edit')->name('promotions.edit');
+    Route::post('promotions/update/{catalog}/{client}', 'PromotionsController@update')->name('promotions.update');
+    Route::delete('promotions/destroy/{catalog}/{client}', 'PromotionsController@destroy')->name('promotions.destroy');
+
+
+    Route::get('raffles/clients', 'RafflesController@clients')->name('raffles.list');
+    Route::get('raffles/list-raffles/{client}', 'RafflesController@list_raffles')->name('raffles.list-raffles');
+    Route::get('raffles/create/{client}', 'RafflesController@create')->name('raffles.create');
+    Route::post('raffles/store/{client}', 'RafflesController@store')->name('raffles.store');
+    Route::get('raffles/edit/{raffle}/{client}', 'RafflesController@edit')->name('raffles.edit');
+    Route::post('raffles/update/{raffle}/{client}', 'RafflesController@update')->name('raffles.update');
+    Route::delete('raffles/destroy/{raffle}/{client}', 'RafflesController@destroy')->name('raffles.destroy');
+
+
+    Route::get('catalogs/clients', 'CatalogsController@clients')->name('catalogs.list');
+    Route::get('catalogs/list-catalogs/{client}', 'CatalogsController@list_catalogs')->name('catalogs.list-catalogs');
+    Route::get('catalogs/create/{client}', 'CatalogsController@create')->name('catalogs.create');
+    Route::post('catalogs/store/{client}', 'CatalogsController@store')->name('catalogs.store');
+    Route::get('catalogs/edit/{catalog}/{client}', 'CatalogsController@edit')->name('catalogs.edit');
+    Route::post('catalogs/update/{catalog}/{client}', 'CatalogsController@update')->name('catalogs.update');
+    Route::delete('catalogs/destroy/{catalog}/{client}', 'CatalogsController@destroy')->name('catalogs.destroy');
+
+    Route::get('ecommerce/clients', 'EcommerceController@clients')->name('ecommerce.list');
+    Route::get('ecommerce/list-ecommerce/{client}', 'EcommerceController@list_catalogs')->name('ecommerce.list-catalogs');
+    Route::get('ecommerce/create/{client}', 'EcommerceController@create')->name('ecommerce.create');
+    Route::post('ecommerce/store/{client}', 'EcommerceController@store')->name('ecommerce.store');
+    Route::get('ecommerce/edit/{ecommerce}/{client}', 'EcommerceController@edit')->name('ecommerce.edit');
+    Route::post('ecommerce/update/{ecommerce}/{client}', 'EcommerceController@update')->name('ecommerce.update');
+    Route::delete('ecommerce/destroy/{ecommerce}/{client}', 'EcommerceController@destroy')->name('ecommerce.destroy');
+
+    Route::resource('/orders', 'OrdersController');
+});
+
+
+Route::get('/home', 'HomeController@index')->name('home');
